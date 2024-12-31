@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+run: once
+
+tasks:
+  precommit:
+    desc: Runs pre-commit hooks
+    deps: [requirements]
+    cmds:
+      - pre-commit install
+      - pre-commit run --all-files
+
+  requirements:
+    desc: Validates requirements for local development
+    preconditions:
+      - sh: pre-commit --version
+        msg: ✗ pre-commit not installed. Run 'brew install pre-commit' to install pre-commit.
+    internal: true

@@ -1,7 +1,6 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
-run: once # by default, each task will only run once. This can be overridden at the task level
-output: prefixed
+run: once
 
 tasks:
   tfready:
@@ -69,14 +68,15 @@ tasks:
       - "terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64"
 
   requirements:
-    desc: Installs the requirements for the local development environment
+    desc: Validates requirements for local development
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     preconditions:
       - sh: tflint --version
-        msg: ✗ tflint not installed failed. Run 'brew install tflint' to install tflint.
+        msg: ✗ tflint not installed. Run 'brew install tflint' to install tflint.
       - sh: "[ -d {{.TF_CONFIGURATION_DIRECTORY}} ]"
         msg: ✗ directory {{.TF_CONFIGURATION_DIRECTORY}} does not exist."
+    internal: true
 
   #########################
   ####### UTIL TASKS ######
