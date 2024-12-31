@@ -132,7 +132,7 @@ tasks:
     deps: [tf-requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64
     internal: true
