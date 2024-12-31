@@ -14,7 +14,7 @@ tasks:
     deps: [requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform fmt -recursive
       - terraform validate
@@ -24,7 +24,7 @@ tasks:
     deps: [requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TFLINT_CONFIG_FILE]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - tflint --recursive --init --config={{.TFLINT_CONFIG_FILE}}
       - tflint --recursive --config={{.TFLINT_CONFIG_FILE}}
@@ -35,7 +35,7 @@ tasks:
     deps: [requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform plan -lock=false -var-file={{.TF_INPUTS_FILE}}
 
@@ -44,7 +44,7 @@ tasks:
     deps: [requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform apply -var-file={{.TF_INPUTS_FILE}} -auto-approve
 
@@ -53,7 +53,7 @@ tasks:
     deps: [requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - rm -rf .terraform
       - rm -rf terraform.tfstate.d
@@ -63,7 +63,7 @@ tasks:
     deps: [requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64"
 
@@ -86,7 +86,7 @@ tasks:
     deps: [requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform init -input=false -backend=false"
     internal: true
@@ -96,7 +96,7 @@ tasks:
     deps: [requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform init -input=false"
     internal: true
@@ -106,7 +106,7 @@ tasks:
     deps: [requirements, tf-create-workspace]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform workspace select {{.TF_WORKSPACE}}"
     internal: true
@@ -116,7 +116,7 @@ tasks:
     deps: [requirements, tfinit]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform workspace new {{.TF_WORKSPACE}}"
     status:
