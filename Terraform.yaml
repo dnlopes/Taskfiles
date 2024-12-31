@@ -11,7 +11,7 @@ tasks:
 
   tfchecks:
     desc: Runs Terraform fmt and validate
-    deps: [requirements, tfinit-offline]
+    deps: [tf-requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -21,7 +21,7 @@ tasks:
 
   tflint:
     desc: Run TFLint
-    deps: [requirements, tfinit-offline]
+    deps: [tf-requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TFLINT_CONFIG_FILE]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -32,7 +32,7 @@ tasks:
 
   tfplan:
     desc: Run Terraform plan
-    deps: [requirements, tf-select-workspace]
+    deps: [tf-requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -41,7 +41,7 @@ tasks:
 
   tfapply:
     desc: Run Terraform apply
-    deps: [requirements, tf-select-workspace]
+    deps: [tf-requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -50,7 +50,7 @@ tasks:
 
   tfclean:
     desc: Cleans the Terraform local environment
-    deps: [requirements]
+    deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -60,14 +60,14 @@ tasks:
 
   tflock:
     desc: (re)generates the .terraform.lock.hcl file
-    deps: [requirements, tfinit-offline]
+    deps: [tf-requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64"
 
-  requirements:
+  tf-requirements:
     desc: Validates requirements for local development
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
@@ -83,7 +83,7 @@ tasks:
   #########################
   tfinit-offline:
     desc: Initializes (offline) the Terraform environment
-    deps: [requirements]
+    deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -93,7 +93,7 @@ tasks:
 
   tfinit:
     desc: Initializes the Terraform environment
-    deps: [requirements]
+    deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -103,7 +103,7 @@ tasks:
 
   tf-select-workspace:
     desc: Selects the Terraform workspace
-    deps: [requirements, tf-create-workspace]
+    deps: [tf-requirements, tf-create-workspace]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
@@ -113,7 +113,7 @@ tasks:
 
   tf-create-workspace:
     desc: Creates the given Terraform workspace
-    deps: [requirements, tfinit]
+    deps: [tf-requirements, tfinit]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
     dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
