@@ -15,5 +15,4 @@ tasks:
   update-submodules:
     desc: Updates repository submodules
     cmds:
-      - pre-commit install
-      - pre-commit run --all-files
+      - git submodule update --remote --recursive
