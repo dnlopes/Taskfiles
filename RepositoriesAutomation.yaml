@@ -15,7 +15,7 @@ tasks:
     desc: executes the given script in the context of the given repository
     run: once
     deps: [requirements]
-    requires: { vars: [REPO_NAME, SCRIPT_PATH, REPOSITORIES_DIR] }
+    requires: { vars: [REPO_NAME, SCRIPTS_LIST, REPOSITORIES_DIR] }
     vars:
       TIMESTAMP: { sh: date +%s }
       REPO_DIR: "{{.REPOSITORIES_DIR}}/{{.REPO_NAME}}"
@@ -40,10 +40,11 @@ tasks:
           REPOSITORY_DIR: "{{.REPO_DIR}}"
           BRANCH_NAME: "{{.BRANCH_NAME}}"
 
-      - task: run-script-for-repository
+      - for: { var: SCRIPTS_LIST, split: "," }
+        task: run-script-for-repository
         vars:
           REPOSITORY_DIR: "{{.REPO_DIR}}"
-          SCRIPT_PATH: "{{.SCRIPT_PATH}}"
+          SCRIPT_PATH: "{{.ITEM}}"
 
       - task: open-pr
         vars:
@@ -59,6 +60,11 @@ tasks:
     desc: runs the given script in the context of the given repository
     dir: "/{{.REPOSITORY_DIR}}"
     cmd: bash {{.SCRIPT_PATH}}
+    preconditions:
+      - sh: "[ -d {{.SCRIPT_PATH}} ]"
+        msg: ✗ directory '{{.SCRIPT_PATH}}' does not exist."
+      - sh: "[[ '{{.SCRIPT_PATH}}' = /* ]]"
+        msg: ✗ directory '{{.SCRIPT_PATH}}' must be an absolute path."
 
   create-branch:
     internal: true
@@ -123,13 +129,8 @@ tasks:
 
   requirements:
     run: once
-    requires: { vars: [SCRIPT_PATH] }
     preconditions:
       - sh: gh --version
         msg: "GH cli is not installed. Please run 'brew install gh' or follow the README instructions"
       - sh: test -n "{{.GH_TOKEN}}"
         msg: "GITHUB_PAT environment variables is not set. Please set it before running this task"
-      - sh: "[ -d {{.SCRIPT_PATH}} ]"
-        msg: ✗ directory '{{.SCRIPT_PATH}}' does not exist."
-      - sh: "[[ '{{.SCRIPT_PATH}}' = /* ]]"
-        msg: ✗ directory '{{.SCRIPT_PATH}}' must be an absolute path."
