@@ -109,6 +109,7 @@ tasks:
       - git fetch --all
 
   delete-old-branches:
+    silent: true
     internal: true
     requires: { vars: [REPOSITORY_DIR, BRANCH_PREFIX] }
     run: always
