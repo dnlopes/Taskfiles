@@ -61,7 +61,7 @@ tasks:
     dir: "/{{.REPOSITORY_DIR}}"
     cmd: bash {{.SCRIPT_PATH}}
     preconditions:
-      - sh: "[ -d {{.SCRIPT_PATH}} ]"
+      - sh: "[ -f {{.SCRIPT_PATH}} ]"
         msg: ✗ directory '{{.SCRIPT_PATH}}' does not exist."
       - sh: "[[ '{{.SCRIPT_PATH}}' = /* ]]"
         msg: ✗ directory '{{.SCRIPT_PATH}}' must be an absolute path."
