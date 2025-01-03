@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://taskfile.dev/schema.json
-version: "3"
-run: once # by default, each task will only run once. This can be overridden at the task level
-
-includes:
-  terraform:
-    taskfile: Common.yaml
-    flatten: true
