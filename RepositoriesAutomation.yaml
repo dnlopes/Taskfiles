@@ -11,7 +11,7 @@ vars:
   BRANCH_NAME_PREFIX: "repo-reconciliation"
 
 tasks:
-  run-script:
+  reconcile-repository:
     desc: executes the given script in the context of the given repository
     run: once
     deps: [requirements]
