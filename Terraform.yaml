@@ -8,34 +8,14 @@ tasks:
     cmds:
       - task: tfchecks
       - task: tflint
-
-  tfchecks:
-    desc: Runs Terraform fmt and validate
-    deps: [tf-requirements, tfinit-offline]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - terraform fmt -recursive
-      - terraform validate
-
-  tflint:
-    desc: Run TFLint
-    deps: [tf-requirements, tfinit-offline]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY, TFLINT_CONFIG_FILE]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - tflint --recursive --init --config={{.TFLINT_CONFIG_FILE}}
-      - tflint --recursive --config={{.TFLINT_CONFIG_FILE}}
-    status: ["[ '{{.SKIP_TFLINT}}' == 'true' ]"]
+      - task: tflock
 
   tfplan:
     desc: Run Terraform plan
     deps: [tf-requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform plan -lock=false -var-file={{.TF_INPUTS_FILE}}
 
@@ -44,7 +24,7 @@ tasks:
     deps: [tf-requirements, tf-select-workspace]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - terraform apply -var-file={{.TF_INPUTS_FILE}} -auto-approve
 
@@ -53,19 +33,36 @@ tasks:
     deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - rm -rf .terraform
       - rm -rf terraform.tfstate.d
 
-  tflock:
-    desc: (re)generates the .terraform.lock.hcl file
+  ####################
+  ## utility tasks ###
+  ####################
+  tfchecks:
+    desc: Runs Terraform fmt and validate
     deps: [tf-requirements, tfinit-offline]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
-      - "terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64"
+      - terraform fmt -recursive
+      - terraform validate
+    internal: true
+
+  tflint:
+    desc: Run TFLint
+    deps: [tf-requirements, tfinit-offline]
+    requires:
+      vars: [TF_CONFIGURATION_DIRECTORY, TFLINT_CONFIG_FILE]
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
+    cmds:
+      - tflint --recursive --init --config={{.TFLINT_CONFIG_FILE}}
+      - tflint --recursive --config={{.TFLINT_CONFIG_FILE}}
+    status: ["[ '{{.SKIP_TFLINT}}' == 'true' ]"]
+    internal: true
 
   tf-requirements:
     desc: Validates requirements for local development
@@ -75,18 +72,25 @@ tasks:
       - sh: tflint --version
         msg: ✗ tflint not installed. Run 'brew install tflint' to install tflint.
       - sh: "[ -d {{.TF_CONFIGURATION_DIRECTORY}} ]"
-        msg: ✗ directory {{.TF_CONFIGURATION_DIRECTORY}} does not exist."
+        msg: ✗ directory '{{.TF_CONFIGURATION_DIRECTORY}}' does not exist."
+      - sh: "[ -f {{.TFLINT_CONFIG_FILE}} ]"
+        msg: ✗ file '{{.TFLINT_CONFIG_FILE}}' does not exist."
+      - sh: "[ -f {{.TF_INPUTS_FILE}} ]"
+        msg: ✗ file '{{.TF_INPUTS_FILE}}' does not exist."
+      - sh: "[[ '{{.TF_CONFIGURATION_DIRECTORY}}' = /* ]]"
+        msg: ✗ directory '{{.TF_CONFIGURATION_DIRECTORY}}' must be an absolute path."
+      - sh: "[[ '{{.TFLINT_CONFIG_FILE}}' = /* ]]"
+        msg: ✗ file '{{.TFLINT_CONFIG_FILE}}' must be an absolute path."
+      - sh: "[[ '{{.TF_INPUTS_FILE}}' = /* ]]"
+        msg: ✗ file '{{.TF_INPUTS_FILE}}' must be an absolute path."
     internal: true
 
-  #########################
-  ####### UTIL TASKS ######
-  #########################
   tfinit-offline:
     desc: Initializes (offline) the Terraform environment
     deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform init -input=false -backend=false"
     internal: true
@@ -96,7 +100,7 @@ tasks:
     deps: [tf-requirements]
     requires:
       vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform init -input=false"
     internal: true
@@ -106,7 +110,7 @@ tasks:
     deps: [tf-requirements, tf-create-workspace]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform workspace select {{.TF_WORKSPACE}}"
     internal: true
@@ -116,9 +120,19 @@ tasks:
     deps: [tf-requirements, tfinit]
     requires:
       vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "{{.USER_WORKING_DIR}}/{{.TF_CONFIGURATION_DIRECTORY}}"
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
     cmds:
       - "terraform workspace new {{.TF_WORKSPACE}}"
     status:
       - "terraform workspace select {{.TF_WORKSPACE}}"
+    internal: true
+
+  tflock:
+    desc: (re)generates the .terraform.lock.hcl file
+    deps: [tf-requirements, tfinit-offline]
+    requires:
+      vars: [TF_CONFIGURATION_DIRECTORY]
+    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
+    cmds:
+      - terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64
     internal: true
