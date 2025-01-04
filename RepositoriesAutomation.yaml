@@ -86,6 +86,7 @@ tasks:
   open-pr:
     label: "create PR"
     prefix: "create PR"
+    silent: true
     internal: true
     requires: { vars: [REPOSITORY_DIR, BRANCH_NAME, GH_TOKEN] }
     dir: "/{{.REPOSITORY_DIR}}"
