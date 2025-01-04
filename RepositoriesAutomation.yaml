@@ -73,6 +73,8 @@ tasks:
         msg: ✗ directory '{{.SCRIPT_PATH}}' must be an absolute path."
 
   create-branch:
+    label: "checkout branch"
+    prefix: "checkout branch"
     internal: true
     requires: { vars: [REPOSITORY_DIR, BRANCH_NAME] }
     desc: creates a branch on the repository on the given directory
@@ -82,6 +84,8 @@ tasks:
       - git show-ref --quiet refs/heads/{{.BRANCH_NAME}}
 
   open-pr:
+    label: "create PR"
+    prefix: "create PR"
     internal: true
     requires: { vars: [REPOSITORY_DIR, BRANCH_NAME, GH_TOKEN] }
     dir: "/{{.REPOSITORY_DIR}}"
@@ -102,20 +106,22 @@ tasks:
       - test -z "$(git status --porcelain)" # if there are no changes to commit
 
   checkout:
+    label: "checkout @ {{.REPO_NAME}}"
+    prefix: "checkout @ {{.REPO_NAME}}"
     internal: true
     requires: { vars: [REPO_NAME, REPOSITORY_DIR] }
     dir: "/{{.REPOSITORY_DIR}}"
-    prefix: "checkout @ {{.REPO_NAME}}"
     cmds:
       - rm -rf {{.REPOSITORY_DIR}}/*
       - git clone git@github.com:{{.REPO_NAME}}.git {{.REPOSITORY_DIR}}
       - git fetch --all
 
   delete-old-branches:
+    label: "cleanup branches"
+    prefix: "cleanup branches"
     silent: true
     internal: true
     requires: { vars: [REPOSITORY_DIR, BRANCH_PREFIX] }
-    prefix: "cleanup old branches"
     dir: "/{{.REPOSITORY_DIR}}"
     cmds:
       - |
