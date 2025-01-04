@@ -14,6 +14,7 @@ vars:
 tasks:
   reconcile-repository:
     label: "reconciler @ {{.REPO_NAME}}"
+    prefix: "reconciler @ {{.REPO_NAME}}"
     desc: executes the given script in the context of the given repository
     deps: [requirements]
     requires: { vars: [REPO_NAME, SCRIPTS_LIST, REPOSITORIES_DIR] }
@@ -56,6 +57,11 @@ tasks:
   # start of internal tasks
   run-script-for-repository:
     internal: true
+    label: "exec @ {{.SCRIPT_NAME}}"
+    prefix: "exec @ {{.SCRIPT_NAME}}"
+    vars:
+      SCRIPT_NAME:
+        sh: basename {{.SCRIPT_PATH}}
     requires: { vars: [REPOSITORY_DIR, SCRIPT_PATH] }
     desc: runs the given script in the context of the given repository
     dir: "/{{.REPOSITORY_DIR}}"
