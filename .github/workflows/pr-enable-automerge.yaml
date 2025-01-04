@@ -1,0 +1,24 @@
+name: PR auto-merge
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  automerge:
+    if: github.actor == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    name: Enable
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enable PR auto-merge
+        run: |
+          PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+          gh pr merge --squash --auto "$PR_NUMBER"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
