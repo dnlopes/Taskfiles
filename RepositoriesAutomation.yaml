@@ -13,7 +13,7 @@ vars:
 
 tasks:
   reconcile-repository:
-    run: always
+    label: "reconciler @ {{.REPO_NAME}}"
     desc: executes the given script in the context of the given repository
     deps: [requirements]
     requires: { vars: [REPO_NAME, SCRIPTS_LIST, REPOSITORIES_DIR] }
