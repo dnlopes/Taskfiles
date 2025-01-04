@@ -5,7 +5,7 @@ run: always
 vars:
   BASE_TMP_DIR: { sh: echo $(echo $TMPDIR)gh-automations }
   REPOSITORIES_DIR: "{{.BASE_TMP_DIR}}/repositories"
-  DEFAULT_PR_MESSAGE: "chore: reconcile repository"
+  DEFAULT_PR_MESSAGE: "reconcile repository"
   PR_LIST_FILE: "{{.USER_WORKING_DIR}}/pr-list.txt"
   PR_LIST_AUTO_APPROVE: "{{.USER_WORKING_DIR}}/pr-approve.txt"
   PR_LIST_MERGE: "{{.USER_WORKING_DIR}}/pr-merge.txt"
