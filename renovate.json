@@ -3,7 +3,6 @@
   "extends": [
     "config:recommended",
     ":configMigration",
-    "helpers:pinGitHubActionDigestsToSemver",
     "group:allNonMajor",
     ":semanticCommitType(chore)",
     ":semanticCommitScope(deps)",
