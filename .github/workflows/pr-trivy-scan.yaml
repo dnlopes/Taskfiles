@@ -13,7 +13,7 @@ jobs:
     name: Scan
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
@@ -41,7 +41,7 @@ jobs:
           echo "</details>" >> trivy-comment.md
           cat trivy-comment.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2
+      - uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
         name: Add PR comment
         if: always()
         with:
