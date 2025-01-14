@@ -26,4 +26,4 @@ jobs:
   semantic_pr:
     needs: pr_labels
     name: Semantic
-    uses: dnlopes/Reusable.Workflows/.github/workflows/semantic-pr.yaml@8c441b3d81a1d125326befa44f1fa2f462cdbfd7 # v1.13.40
+    uses: dnlopes/Reusable.Workflows/.github/workflows/semantic-pr.yaml@ea5826e9171eec2bd37971dca686bd8568309dd8 # v1.13.41
