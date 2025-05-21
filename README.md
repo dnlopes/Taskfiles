@@ -18,3 +18,7 @@ Below you can find a quick summary of each Taskfile:
 * ```Homebrew```: a set of primitives to automate formulas and casks installs/upgrades
   * **FORMULA_NAME**: the name of the formula to install/update
   * **CASK_NAME**: the name of the formula to install/update
+* ```AWS```: provides a wrapper to some AWS CLI actions
+  * **FILE_PATH**: the file to download/upload
+  * **S3_BUCKET_NAME**: the bucket name
+  * **S3_OBJECT_KEY**: the bucket object to download/upload
