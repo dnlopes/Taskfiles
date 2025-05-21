@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+run: once
+
+vars:
+  GPG_PUBLIC_KEY_SERVER: '{{.GPG_PUBLIC_KEY_SERVER | default "hkps://keys.openpgp.org" }}'
+
+tasks:
+  encrypt-file:
+    desc: "encrypt the given file with the given GPG key"
+    dir: "{{.USER_WORKING_DIR}}"
+    requires: { vars: [SOURCE_FILE, DEST_FILE, GPG_KEY_ID] }
+    preconditions:
+      - sh: "[ -f {{.SOURCE_FILE}} ]"
+        msg: "file {{.SOURCE_FILE}} does not exist"
+      - sh: gpg --fingerprint {{.GPG_KEY_ID}}
+        msg: "unknown GPG recipient: {{.GPG_KEY_ID}}"
+    cmd: gpg --encrypt --recipient "{{.GPG_KEY_ID}}" --output "{{.DEST_FILE}}" "{{.SOURCE_FILE}}"
+
+  decrypt-file:
+    desc: "decrypt the given file using the given GPG key"
+    dir: "{{.USER_WORKING_DIR}}"
+    requires: { vars: [SOURCE_FILE, DEST_FILE, GPG_KEY_ID] }
+    preconditions:
+      - sh: "[ -f {{.FILE_PATH}} ]"
+        msg: "file {{.FILE_PATH}} does not exist"
+      - sh: gpg --fingerprint {{.GPG_KEY_ID}}
+        msg: "unknown GPG recipient: {{.GPG_KEY_ID}}"
+    cmd: gpg --decrypt --output "{{.DEST_FILE}}" "{{.SOURCE_FILE}}"
+
+  fetch-public-key:
+    desc: "fetch the GPG public key from the key server"
+    run: when_changed
+    label: "gpg-fetch-public-key > {{.KEY_ID}}"
+    requires: { vars: [KEY_ID, GPG_PUBLIC_KEY_SERVER] }
+    cmd: gpg --keyserver {{.GPG_PUBLIC_KEY_SERVER}} --receive-keys {{.KEY_ID}}
+    status:
+      - gpg --fingerprint {{.KEY_ID}}
+
+  trust-key:
+    desc: "sets ultimate trust on the given GPG key"
+    run: when_changed
+    label: "gpg-trust-key > {{.KEY_ID}}"
+    requires: { vars: [KEY_ID] }
+    cmd: echo "{{.KEY_ID}}:6:" | gpg --import-ownertrust
+    status:
+      - gpg --list-keys --with-colons {{.KEY_ID}} | grep "^uid" | grep  -qE ":[fmu]:"

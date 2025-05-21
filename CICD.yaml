@@ -4,7 +4,7 @@ run: once
 
 tasks:
   precommit:
-    desc: Runs pre-commit hooks
+    desc: run pre-commit hooks
     preconditions:
       - sh: pre-commit --version
         msg: ✗ pre-commit not installed. Run 'brew install pre-commit' to install pre-commit.
@@ -13,7 +13,7 @@ tasks:
       - pre-commit run --all-files
 
   update-submodules:
-    desc: Updates repository submodules
+    desc: updates repository submodules
     cmds:
       - git submodule update --init --recursive
       - git submodule update --remote --recursive

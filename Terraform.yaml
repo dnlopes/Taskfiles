@@ -2,137 +2,107 @@
 version: "3"
 run: once
 
+vars:
+  SKIP_TFLINT: '{{.SKIP_TFLINT | default "false" }}'
+  TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" }
+
 tasks:
-  tfready:
-    desc: Runs Terraform validations to ensure configuration is sound.
+  ready:
+    deps: [requirements]
+    desc: run Terraform validations to ensure configuration is healthy.
     cmds:
-      - task: tfchecks
-      - task: tflint
-      - task: tflock
+      - task: checks
+      - task: lint
 
-  tfplan:
-    desc: Run Terraform plan
-    deps: [tf-requirements, tf-select-workspace]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - terraform plan -lock=false -var-file={{.TF_INPUTS_FILE}}
+  lock-providers:
+    desc: update .terraform.lock.hcl with the latest providers versions
+    deps: [init]
+    requires: { vars: [TF_CONFIG_DIR] }
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64
 
-  tfapply:
-    desc: Run Terraform apply
-    deps: [tf-requirements, tf-select-workspace]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY, TF_INPUTS_FILE]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
+  plan:
+    desc: run Terraform plan
+    deps: [requirements, init, select-workspace]
+    requires: { vars: [TF_CONFIG_DIR, TF_INPUTS_FILE] }
+    vars:
+      TF_VARS_FILE_ABSPATH: { sh: "realpath {{.TF_INPUTS_FILE}}" }
+      TF_VARS_FILE_GENERATED: "{{.TF_CONFIG_DIR_ABSPATH}}/taskfile_generated.auto.tfvars"
     cmds:
-      - terraform apply -var-file={{.TF_INPUTS_FILE}} -auto-approve
+      - '[ -f "{{.TF_VARS_FILE_ABSPATH}}" ] && cp "{{.TF_VARS_FILE_ABSPATH}}" "{{.TF_VARS_FILE_GENERATED}}" || true'
+      - defer: "rm -f {{.TF_VARS_FILE_GENERATED}}"
+      - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" plan -lock=false
 
-  tfclean:
-    desc: Cleans the Terraform local environment
-    deps: [tf-requirements]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
+  apply:
+    desc: run Terraform apply
+    deps: [requirements, init, select-workspace]
+    requires: { vars: [TF_CONFIG_DIR, TF_INPUTS_FILE] }
+    vars:
+      TF_VARS_FILE_ABSPATH: { sh: "realpath {{.TF_INPUTS_FILE}}" }
+      TF_VARS_FILE_GENERATED: "{{.TF_CONFIG_DIR_ABSPATH}}/taskfile_generated.auto.tfvars"
     cmds:
-      - rm -rf .terraform
-      - rm -rf terraform.tfstate.d
+      - '[ -f "{{.TF_VARS_FILE_ABSPATH}}" ] && cp "{{.TF_VARS_FILE_ABSPATH}}" "{{.TF_VARS_FILE_GENERATED}}" || true'
+      - defer: "rm -f {{.TF_VARS_FILE_GENERATED}}"
+      - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" apply -auto-approve
 
-  ####################
-  ## utility tasks ###
-  ####################
-  tfchecks:
-    desc: Runs Terraform fmt and validate
-    deps: [tf-requirements, tfinit-offline]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - terraform fmt -recursive
-      - terraform validate
+  ##################################################
+  ############# internal tasks #####################
+  ##################################################
+  checks:
     internal: true
-
-  tflint:
-    desc: Run TFLint
-    deps: [tf-requirements, tfinit-offline]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY, TFLINT_CONFIG_FILE]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
+    deps: [init-offline]
+    requires: { vars: [TF_CONFIG_DIR] }
     cmds:
-      - tflint --recursive --init --config={{.TFLINT_CONFIG_FILE}}
-      - tflint --recursive --config={{.TFLINT_CONFIG_FILE}}
+      - terraform -chdir="{{.TF_DIR_ABSPATH}}" fmt -recursive
+      - terraform -chdir="{{.TF_DIR_ABSPATH}}" validate
+
+  lint:
+    internal: true
+    deps: [init-offline]
+    requires: { vars: [TF_CONFIG_DIR] }
+    vars:
+      TFLINT_CONFIG_ABSPATH: { sh: "realpath {{.TFLINT_CONFIG_FILE}}" }
+    dir: "/{{.TF_CONFIG_DIR_ABSPATH}}"
+    cmds:
+      - tflint --recursive --init --config={{.TFLINT_CONFIG_ABSPATH}}
+      - tflint --recursive --config={{.TFLINT_CONFIG_ABSPATH}}
     status: ["[ '{{.SKIP_TFLINT}}' == 'true' ]"]
-    internal: true
 
-  tf-requirements:
-    desc: Validates requirements for local development
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
+  requirements:
+    internal: true
+    requires: { vars: [TF_CONFIG_DIR] }
     preconditions:
       - sh: tflint --version
         msg: ✗ tflint not installed. Run 'brew install tflint' to install tflint.
-      - sh: "[ -d {{.TF_CONFIGURATION_DIRECTORY}} ]"
-        msg: ✗ directory '{{.TF_CONFIGURATION_DIRECTORY}}' does not exist."
-      - sh: "[ -f {{.TFLINT_CONFIG_FILE}} ]"
-        msg: ✗ file '{{.TFLINT_CONFIG_FILE}}' does not exist."
-      - sh: "[ -f {{.TF_INPUTS_FILE}} ]"
-        msg: ✗ file '{{.TF_INPUTS_FILE}}' does not exist."
-      - sh: "[[ '{{.TF_CONFIGURATION_DIRECTORY}}' = /* ]]"
-        msg: ✗ directory '{{.TF_CONFIGURATION_DIRECTORY}}' must be an absolute path."
-      - sh: "[[ '{{.TFLINT_CONFIG_FILE}}' = /* ]]"
-        msg: ✗ file '{{.TFLINT_CONFIG_FILE}}' must be an absolute path."
-      - sh: "[[ '{{.TF_INPUTS_FILE}}' = /* ]]"
-        msg: ✗ file '{{.TF_INPUTS_FILE}}' must be an absolute path."
-    internal: true
+      - sh: "which realpath"
+        msg: ✗ realpath binary not found"
+      - sh: "[ -d {{.TF_CONFIG_DIR}} ]"
+        msg: ✗ directory '{{.TF_CONFIG_DIR}}' does not exist."
 
-  tfinit-offline:
-    desc: Initializes (offline) the Terraform environment
-    deps: [tf-requirements]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - "terraform init -input=false -backend=false"
+  init-offline:
     internal: true
+    requires: { vars: [TF_CONFIG_DIR] }
+    vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false -backend=false
 
-  tfinit:
-    desc: Initializes the Terraform environment
-    deps: [tf-requirements]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - "terraform init -input=false"
+  init:
     internal: true
+    requires: { vars: [TF_CONFIG_DIR] }
+    vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false
 
-  tf-select-workspace:
-    desc: Selects the Terraform workspace
-    deps: [tf-requirements, tf-create-workspace]
-    requires:
-      vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - "terraform workspace select {{.TF_WORKSPACE}}"
+  select-workspace:
     internal: true
+    deps: [create-workspace]
+    requires: { vars: [TF_WORKSPACE, TF_CONFIG_DIR] }
+    vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" workspace select {{.TF_WORKSPACE}}
 
-  tf-create-workspace:
-    desc: Creates the given Terraform workspace
-    deps: [tf-requirements, tfinit]
-    requires:
-      vars: [TF_WORKSPACE, TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - "terraform workspace new {{.TF_WORKSPACE}}"
+  create-workspace:
+    internal: true
+    deps: [init]
+    requires: { vars: [TF_WORKSPACE, TF_CONFIG_DIR] }
+    vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
+    dir: "/{{.TF_CONFIG_DIR}}"
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" workspace new {{.TF_WORKSPACE}}
     status:
-      - "terraform workspace select {{.TF_WORKSPACE}}"
-    internal: true
-
-  tflock:
-    desc: (re)generates the .terraform.lock.hcl file
-    deps: [tf-requirements, tfinit-offline]
-    requires:
-      vars: [TF_CONFIGURATION_DIRECTORY]
-    dir: "/{{.TF_CONFIGURATION_DIRECTORY}}"
-    cmds:
-      - terraform providers lock -platform=windows_amd64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64
-    internal: true
+      - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" workspace select {{.TF_WORKSPACE}}

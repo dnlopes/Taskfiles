@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  install-upgrade-formula:
+    desc: installs or upgrades a Homebrew formula
+    deps: [update]
+    run: always
+    requires: { vars: [FORMULA_NAME] }
+    cmds:
+      - task: install-formula
+        vars: { FORMULA_NAME: "{{.FORMULA_NAME}}" }
+      - task: update-formula
+        vars: { FORMULA_NAME: "{{.FORMULA_NAME}}" }
+
+  install-upgrade-cask:
+    desc: installs or upgrades a Homebrew cask
+    deps: [update]
+    run: always
+    requires: { vars: [CASK_NAME] }
+    cmds:
+      - task: install-cask
+        vars: { CASK_NAME: "{{.CASK_NAME}}" }
+      - task: update-cask
+        vars: { CASK_NAME: "{{.CASK_NAME}}" }
+
+  cleanup:
+    desc: cleanup Homebrew cache
+    run: once
+    cmd: brew cleanup
+
+  ##################################################
+  ############# internal tasks #####################
+  ##################################################
+
+  update:
+    internal: true
+    run: once
+    cmd: brew update
+
+  install-formula:
+    internal: true
+    run: when_changed
+    label: "install-formula > {{.FORMULA_NAME}}"
+    requires: { vars: [FORMULA_NAME] }
+    cmd: brew install {{.FORMULA_NAME}}
+    status:
+      - brew list --formula --versions {{.FORMULA_NAME}}
+
+  update-formula:
+    internal: true
+    run: when_changed
+    label: "update-formula > {{.FORMULA_NAME}}"
+    requires: { vars: [FORMULA_NAME] }
+    cmd: brew upgrade {{.FORMULA_NAME}}
+    status:
+      - brew outdated --formula {{.FORMULA_NAME}}
+
+  install-cask:
+    internal: true
+    run: when_changed
+    label: "install-cask > {{.CASK_NAME}}"
+    requires: { vars: [CASK_NAME] }
+    cmd: brew install --cask {{.CASK_NAME}}
+    status:
+      - brew list --cask --versions {{.CASK_NAME}}
+
+  update-cask:
+    internal: true
+    run: when_changed
+    label: "update-cask > {{.CASK_NAME}}"
+    requires: { vars: [CASK_NAME] }
+    cmd: brew upgrade {{.CASK_NAME}}
+    status:
+      - brew outdated --cask {{.CASK_NAME}}
