@@ -52,8 +52,8 @@ tasks:
     deps: [init-offline]
     requires: { vars: [TF_CONFIG_DIR] }
     cmds:
-      - terraform -chdir="{{.TF_DIR_ABSPATH}}" fmt -recursive
-      - terraform -chdir="{{.TF_DIR_ABSPATH}}" validate
+      - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" fmt -recursive
+      - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" validate
 
   lint:
     internal: true
@@ -61,7 +61,6 @@ tasks:
     requires: { vars: [TF_CONFIG_DIR] }
     vars:
       TFLINT_CONFIG_ABSPATH: { sh: "realpath {{.TFLINT_CONFIG_FILE}}" }
-    dir: "/{{.TF_CONFIG_DIR_ABSPATH}}"
     cmds:
       - tflint --recursive --init --config={{.TFLINT_CONFIG_ABSPATH}}
       - tflint --recursive --config={{.TFLINT_CONFIG_ABSPATH}}
@@ -82,13 +81,13 @@ tasks:
     internal: true
     requires: { vars: [TF_CONFIG_DIR] }
     vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
-    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false -backend=false
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false -backend=false -upgrade
 
   init:
     internal: true
     requires: { vars: [TF_CONFIG_DIR] }
     vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
-    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false
+    cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" init -input=false -upgrade
 
   select-workspace:
     internal: true
@@ -102,7 +101,6 @@ tasks:
     deps: [init]
     requires: { vars: [TF_WORKSPACE, TF_CONFIG_DIR] }
     vars: { TF_CONFIG_DIR_ABSPATH: { sh: "realpath {{.TF_CONFIG_DIR}}" } }
-    dir: "/{{.TF_CONFIG_DIR}}"
     cmd: terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" workspace new {{.TF_WORKSPACE}}
     status:
       - terraform -chdir="{{.TF_CONFIG_DIR_ABSPATH}}" workspace select {{.TF_WORKSPACE}}
