@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    "helpers:pinGitHubActionDigestsToSemver",
+    ":configMigration",
     "group:allNonMajor",
     ":semanticCommitType(chore)",
     ":semanticCommitScope(deps)",
@@ -17,5 +17,13 @@
   ],
   "schedule": ["* 0-5 * * 4,5"],
   "reviewersFromCodeOwners": true,
-  "automergeStrategy": "squash"
+  "automergeStrategy": "squash",
+  "packageRules": [
+    {
+      "matchDepTypes": [
+        "action"
+      ],
+      "pinDigests": false
+    }
+  ]
 }

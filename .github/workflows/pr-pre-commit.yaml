@@ -16,5 +16,5 @@ permissions:
 jobs:
   pre_commmit:
     name: Pre-commit
-    uses: dnlopes/Reusable.Workflows/.github/workflows/pre-commit-hooks.yaml@cffda3c04a829aedc3fd409a1a81a4201d806067 # v1.13.64
+    uses: dnlopes/Reusable.Workflows/.github/workflows/pre-commit-hooks.yaml@v1
     secrets: inherit
